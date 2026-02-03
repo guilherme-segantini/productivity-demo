@@ -1,0 +1,13 @@
+<mvc:View
+    controllerName="tech.trends.radar.controller.RadarView"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m">
+    <Page
+        id="radarPage"
+        title="{i18n>radarViewTitle}"
+        showNavButton="false">
+        <content>
+            <Text text="{i18n>welcomeMessage}" class="sapUiMediumMargin" />
+        </content>
+    </Page>
+</mvc:View>
