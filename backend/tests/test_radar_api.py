@@ -157,3 +157,110 @@ def test_response_time():
 
     assert response.status_code == 200
     assert elapsed < 0.2, f"Response took {elapsed:.3f}s, expected <0.2s"
+
+
+def test_refresh_endpoint_with_mock():
+    """Test refresh endpoint with mocked Grok service."""
+    from unittest.mock import patch
+
+    mock_result = {
+        "radar_date": "2026-02-03",
+        "trends": [
+            {
+                "focus_area": "voice_ai_ux",
+                "tool_name": "MockTool",
+                "classification": "signal",
+                "confidence_score": 88,
+                "technical_insight": "Mock insight",
+                "signal_evidence": ["mock evidence"],
+                "noise_indicators": [],
+                "architectural_verdict": True,
+                "timestamp": "2026-02-03T12:00:00Z",
+            }
+        ],
+    }
+
+    with patch("app.services.grok_service.run_full_analysis", return_value=mock_result):
+        response = client.post("/api/radar/refresh")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["trends_count"] == 1
+    assert data["radar_date"] == "2026-02-03"
+
+    # Verify data was persisted
+    response = client.get("/api/radar")
+    data = response.json()
+    assert len(data["trends"]) == 1
+    assert data["trends"][0]["tool_name"] == "MockTool"
+
+
+def test_refresh_endpoint_empty_results():
+    """Test refresh endpoint when no trends are discovered."""
+    from unittest.mock import patch
+
+    mock_result = {
+        "radar_date": "2026-02-03",
+        "trends": [],
+    }
+
+    with patch("app.services.grok_service.run_full_analysis", return_value=mock_result):
+        response = client.post("/api/radar/refresh")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "warning"
+    assert data["trends_count"] == 0
+
+
+def test_refresh_replaces_existing_data():
+    """Test that refresh replaces data for the same date."""
+    from unittest.mock import patch
+
+    # Insert existing data
+    db = TestingSessionLocal()
+    trend = Trend(
+        radar_date="2026-02-03",
+        focus_area="voice_ai_ux",
+        tool_name="OldTool",
+        classification="noise",
+        confidence_score=50,
+        technical_insight="Old insight",
+        signal_evidence=json.dumps([]),
+        noise_indicators=json.dumps(["old"]),
+        architectural_verdict=False,
+        timestamp="2026-02-03T08:00:00Z",
+    )
+    db.add(trend)
+    db.commit()
+    db.close()
+
+    # Refresh with new data
+    mock_result = {
+        "radar_date": "2026-02-03",
+        "trends": [
+            {
+                "focus_area": "voice_ai_ux",
+                "tool_name": "NewTool",
+                "classification": "signal",
+                "confidence_score": 95,
+                "technical_insight": "New insight",
+                "signal_evidence": ["new evidence"],
+                "noise_indicators": [],
+                "architectural_verdict": True,
+                "timestamp": "2026-02-03T12:00:00Z",
+            }
+        ],
+    }
+
+    with patch("app.services.grok_service.run_full_analysis", return_value=mock_result):
+        response = client.post("/api/radar/refresh")
+
+    assert response.status_code == 200
+
+    # Verify old data was replaced
+    response = client.get("/api/radar?date_param=2026-02-03")
+    data = response.json()
+    assert len(data["trends"]) == 1
+    assert data["trends"][0]["tool_name"] == "NewTool"
