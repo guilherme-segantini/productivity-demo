@@ -1,7 +1,9 @@
 """Grok/LiteLLM service for AI-powered radar analysis."""
 
 import json
+import logging
 import os
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -9,6 +11,13 @@ import litellm
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Retry configuration
+MAX_RETRIES = 3
+INITIAL_BACKOFF = 1.0  # seconds
 
 FOCUS_AREAS = {
     "voice_ai_ux": {
@@ -80,6 +89,59 @@ Return a JSON array with 2-4 tools (mix of signal and noise). Format:
 IMPORTANT: Return ONLY the JSON array, no other text."""
 
 
+def validate_trend(trend: dict) -> bool:
+    """Validate a trend dictionary has all required fields."""
+    required_fields = [
+        "tool_name",
+        "classification",
+        "confidence_score",
+        "technical_insight",
+        "architectural_verdict",
+    ]
+    for field in required_fields:
+        if field not in trend:
+            return False
+
+    # Validate classification value
+    if trend["classification"] not in ("signal", "noise"):
+        return False
+
+    # Validate confidence score range
+    if not isinstance(trend["confidence_score"], int) or not 1 <= trend["confidence_score"] <= 100:
+        return False
+
+    return True
+
+
+def call_grok_with_retry(prompt: str) -> Optional[str]:
+    """
+    Call Grok API with exponential backoff retry logic.
+
+    Returns response content string or None if all retries fail.
+    """
+    backoff = INITIAL_BACKOFF
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = litellm.completion(
+                model="xai/grok-beta",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+            )
+            return response.choices[0].message.content.strip()
+
+        except Exception as e:
+            logger.warning(
+                f"Grok API call failed (attempt {attempt + 1}/{MAX_RETRIES}): {e}"
+            )
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(backoff)
+                backoff *= 2  # Exponential backoff
+
+    logger.error(f"All {MAX_RETRIES} Grok API attempts failed")
+    return None
+
+
 def analyze_focus_area(focus_area: str) -> Optional[list[dict]]:
     """
     Analyze a single focus area using Grok via LiteLLM.
@@ -96,15 +158,15 @@ def analyze_focus_area(focus_area: str) -> Optional[list[dict]]:
         evaluation_criteria=area_config["evaluation_criteria"],
     )
 
+    logger.info(f"Analyzing focus area: {focus_area}")
+
+    # Call Grok API with retry logic
+    content = call_grok_with_retry(prompt)
+    if not content:
+        logger.error(f"Failed to get response for {focus_area}")
+        return None
+
     try:
-        response = litellm.completion(
-            model="xai/grok-beta",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-        )
-
-        content = response.choices[0].message.content.strip()
-
         # Try to extract JSON from response
         if content.startswith("["):
             trends = json.loads(content)
@@ -115,18 +177,27 @@ def analyze_focus_area(focus_area: str) -> Optional[list[dict]]:
             if start != -1 and end > start:
                 trends = json.loads(content[start:end])
             else:
+                logger.warning(f"No JSON array found in response for {focus_area}")
                 return None
 
-        # Add focus_area to each trend
+        # Validate and filter trends
+        valid_trends = []
         for trend in trends:
-            trend["focus_area"] = focus_area
-            trend["timestamp"] = datetime.now(timezone.utc).isoformat()
+            if validate_trend(trend):
+                trend["focus_area"] = focus_area
+                trend["timestamp"] = datetime.now(timezone.utc).isoformat()
+                # Ensure arrays exist
+                trend.setdefault("signal_evidence", [])
+                trend.setdefault("noise_indicators", [])
+                valid_trends.append(trend)
+            else:
+                logger.warning(f"Invalid trend skipped: {trend.get('tool_name', 'unknown')}")
 
-        return trends
+        logger.info(f"Found {len(valid_trends)} valid trends for {focus_area}")
+        return valid_trends
 
-    except json.JSONDecodeError:
-        return None
-    except Exception:
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error for {focus_area}: {e}")
         return None
 
 
@@ -139,12 +210,47 @@ def run_full_analysis() -> dict:
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     all_trends = []
 
+    logger.info(f"Starting full radar analysis for {today}")
+
     for focus_area in FOCUS_AREAS:
         trends = analyze_focus_area(focus_area)
         if trends:
             all_trends.extend(trends)
 
+    logger.info(f"Analysis complete: {len(all_trends)} total trends discovered")
+
     return {
         "radar_date": today,
         "trends": all_trends,
     }
+
+
+def check_api_connection() -> dict:
+    """
+    Check if the Grok API connection is working.
+
+    Returns dict with status and message.
+    """
+    api_key = os.getenv("XAI_API_KEY")
+    if not api_key:
+        return {
+            "status": "error",
+            "message": "XAI_API_KEY environment variable not set",
+        }
+
+    try:
+        response = litellm.completion(
+            model="xai/grok-beta",
+            messages=[{"role": "user", "content": "Say 'OK' if you can hear me."}],
+            max_tokens=10,
+        )
+        return {
+            "status": "ok",
+            "message": "Grok API connection successful",
+            "model": "xai/grok-beta",
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Grok API connection failed: {str(e)}",
+        }

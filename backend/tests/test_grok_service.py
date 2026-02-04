@@ -6,6 +6,9 @@ from unittest.mock import patch, MagicMock
 from app.services.grok_service import (
     analyze_focus_area,
     run_full_analysis,
+    check_api_connection,
+    validate_trend,
+    call_grok_with_retry,
     FOCUS_AREAS,
 )
 
@@ -134,3 +137,158 @@ class TestRunFullAnalysis:
 
         assert result["trends"] == []
         assert "radar_date" in result
+
+
+class TestValidateTrend:
+    """Test trend validation function."""
+
+    def test_valid_signal_trend(self):
+        """Test valid signal trend passes validation."""
+        trend = {
+            "tool_name": "TestTool",
+            "classification": "signal",
+            "confidence_score": 85,
+            "technical_insight": "Good benchmarks",
+            "architectural_verdict": True,
+        }
+        assert validate_trend(trend) is True
+
+    def test_valid_noise_trend(self):
+        """Test valid noise trend passes validation."""
+        trend = {
+            "tool_name": "HypeTool",
+            "classification": "noise",
+            "confidence_score": 40,
+            "technical_insight": "All marketing",
+            "architectural_verdict": False,
+        }
+        assert validate_trend(trend) is True
+
+    def test_missing_required_field(self):
+        """Test trend missing required field fails validation."""
+        trend = {
+            "tool_name": "TestTool",
+            "classification": "signal",
+            # missing confidence_score
+            "technical_insight": "Test",
+            "architectural_verdict": True,
+        }
+        assert validate_trend(trend) is False
+
+    def test_invalid_classification(self):
+        """Test invalid classification value fails validation."""
+        trend = {
+            "tool_name": "TestTool",
+            "classification": "maybe",  # invalid
+            "confidence_score": 85,
+            "technical_insight": "Test",
+            "architectural_verdict": True,
+        }
+        assert validate_trend(trend) is False
+
+    def test_confidence_score_out_of_range(self):
+        """Test confidence score out of range fails validation."""
+        trend = {
+            "tool_name": "TestTool",
+            "classification": "signal",
+            "confidence_score": 150,  # out of range
+            "technical_insight": "Test",
+            "architectural_verdict": True,
+        }
+        assert validate_trend(trend) is False
+
+    def test_confidence_score_zero(self):
+        """Test confidence score of 0 fails validation."""
+        trend = {
+            "tool_name": "TestTool",
+            "classification": "signal",
+            "confidence_score": 0,
+            "technical_insight": "Test",
+            "architectural_verdict": True,
+        }
+        assert validate_trend(trend) is False
+
+
+class TestCallGrokWithRetry:
+    """Test retry logic for Grok API calls."""
+
+    @patch("app.services.grok_service.litellm.completion")
+    def test_successful_first_attempt(self, mock_completion):
+        """Test successful response on first attempt."""
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "Test response"
+        mock_completion.return_value = mock_response
+
+        result = call_grok_with_retry("Test prompt")
+
+        assert result == "Test response"
+        assert mock_completion.call_count == 1
+
+    @patch("app.services.grok_service.time.sleep")
+    @patch("app.services.grok_service.litellm.completion")
+    def test_retry_on_failure(self, mock_completion, mock_sleep):
+        """Test retry behavior on API failure."""
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "Success"
+        mock_completion.side_effect = [
+            Exception("First failure"),
+            Exception("Second failure"),
+            mock_response,
+        ]
+
+        result = call_grok_with_retry("Test prompt")
+
+        assert result == "Success"
+        assert mock_completion.call_count == 3
+        assert mock_sleep.call_count == 2
+
+    @patch("app.services.grok_service.time.sleep")
+    @patch("app.services.grok_service.litellm.completion")
+    def test_all_retries_exhausted(self, mock_completion, mock_sleep):
+        """Test returns None when all retries are exhausted."""
+        mock_completion.side_effect = Exception("Always fails")
+
+        result = call_grok_with_retry("Test prompt")
+
+        assert result is None
+        assert mock_completion.call_count == 3
+
+
+class TestCheckApiConnection:
+    """Test API connection check function."""
+
+    @patch("app.services.grok_service.os.getenv")
+    def test_missing_api_key(self, mock_getenv):
+        """Test error when API key is not set."""
+        mock_getenv.return_value = None
+
+        result = check_api_connection()
+
+        assert result["status"] == "error"
+        assert "XAI_API_KEY" in result["message"]
+
+    @patch("app.services.grok_service.litellm.completion")
+    @patch("app.services.grok_service.os.getenv")
+    def test_successful_connection(self, mock_getenv, mock_completion):
+        """Test successful API connection check."""
+        mock_getenv.return_value = "test-api-key"
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "OK"
+        mock_completion.return_value = mock_response
+
+        result = check_api_connection()
+
+        assert result["status"] == "ok"
+        assert result["model"] == "xai/grok-beta"
+
+    @patch("app.services.grok_service.litellm.completion")
+    @patch("app.services.grok_service.os.getenv")
+    def test_connection_failure(self, mock_getenv, mock_completion):
+        """Test API connection failure."""
+        mock_getenv.return_value = "test-api-key"
+        mock_completion.side_effect = Exception("Connection refused")
+
+        result = check_api_connection()
+
+        assert result["status"] == "error"
+        assert "Connection refused" in result["message"]

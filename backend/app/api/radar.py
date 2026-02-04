@@ -149,3 +149,11 @@ def refresh_radar(db: Session = Depends(get_db)):
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@router.get("/health/grok")
+def grok_health_check():
+    """Check Grok API connection status."""
+    from app.services.grok_service import check_api_connection
+
+    return check_api_connection()
