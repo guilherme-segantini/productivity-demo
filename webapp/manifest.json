@@ -9,7 +9,12 @@
     "applicationVersion": {
       "version": "1.0.0"
     },
-    "dataSources": {}
+    "dataSources": {
+      "radarData": {
+        "uri": "localService/mock_radar.json",
+        "type": "JSON"
+      }
+    }
   },
   "sap.ui": {
     "technology": "UI5",
@@ -47,6 +52,10 @@
         "settings": {
           "bundleName": "tech.trends.radar.i18n.i18n"
         }
+      },
+      "radar": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "radarData"
       }
     },
     "routing": {

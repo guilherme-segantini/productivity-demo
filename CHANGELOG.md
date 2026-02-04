@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **SAPUI5 project structure** - Complete webapp folder structure with Component.js, manifest.json, views, controllers, i18n, and routing
 - **RadarView with focus area cards** - Three cards (Voice AI, Agent Orchestration, Durable Runtime) with signal/noise sections using CSS Grid layout
+- **Mock data and JSON model binding** - mock_radar.json with 6 sample trends, JSON model configured in manifest, controller filters data by focus area
 - **Signal vs Noise classification** - Core feature to distinguish actionable technical findings from marketing hype
 - `signal_evidence` and `noise_indicators` fields in Golden Contract schema
 - Mock data with signal and noise examples for each focus area (6 items total)

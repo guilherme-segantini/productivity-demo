@@ -3,7 +3,8 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:f="sap.f"
-    xmlns:grid="sap.ui.layout.cssgrid">
+    xmlns:grid="sap.ui.layout.cssgrid"
+    xmlns:core="sap.ui.core">
     <Page
         id="radarPage"
         title="{i18n>radarViewTitle}"
@@ -21,12 +22,12 @@
                     <f:content>
                         <VBox class="sapUiSmallMargin">
                             <Title text="{i18n>signalLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="voiceAiSignals" class="sapUiTinyMarginBottom">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="voiceAiSignals" items="{voiceAiSignals>/items}" class="sapUiTinyMarginBottom">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.SignalItem" type="XML" />
                             </VBox>
                             <Title text="{i18n>noiseLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="voiceAiNoise">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="voiceAiNoise" items="{voiceAiNoise>/items}">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.NoiseItem" type="XML" />
                             </VBox>
                         </VBox>
                     </f:content>
@@ -43,12 +44,12 @@
                     <f:content>
                         <VBox class="sapUiSmallMargin">
                             <Title text="{i18n>signalLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="agentOrchSignals" class="sapUiTinyMarginBottom">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="agentOrchSignals" items="{agentOrchSignals>/items}" class="sapUiTinyMarginBottom">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.SignalItem" type="XML" />
                             </VBox>
                             <Title text="{i18n>noiseLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="agentOrchNoise">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="agentOrchNoise" items="{agentOrchNoise>/items}">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.NoiseItem" type="XML" />
                             </VBox>
                         </VBox>
                     </f:content>
@@ -65,12 +66,12 @@
                     <f:content>
                         <VBox class="sapUiSmallMargin">
                             <Title text="{i18n>signalLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="durableRuntimeSignals" class="sapUiTinyMarginBottom">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="durableRuntimeSignals" items="{durableRuntimeSignals>/items}" class="sapUiTinyMarginBottom">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.SignalItem" type="XML" />
                             </VBox>
                             <Title text="{i18n>noiseLabel}" level="H5" class="sapUiTinyMarginBottom" />
-                            <VBox id="durableRuntimeNoise">
-                                <Text text="{i18n>noDataAvailable}" />
+                            <VBox id="durableRuntimeNoise" items="{durableRuntimeNoise>/items}">
+                                <core:Fragment fragmentName="tech.trends.radar.view.fragment.NoiseItem" type="XML" />
                             </VBox>
                         </VBox>
                     </f:content>
