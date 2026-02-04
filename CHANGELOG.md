@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Voice AI prompt template** (`prompts/voice_ai_prompt.md`) - Discovery and classification prompt with criteria for latency benchmarks, VAD implementation, streaming architecture
+- **Agent Orchestration prompt template** (`prompts/agent_orchestration_prompt.md`) - Discovery and classification prompt with criteria for state persistence, tool chaining, human-in-the-loop patterns
+- **Durable Runtime prompt template** (`prompts/durable_runtime_prompt.md`) - Discovery and classification prompt with criteria for durability guarantees, cold-start benchmarks, checkpoint/recovery
 - **SAPUI5 project structure** - Complete webapp folder structure with Component.js, manifest.json, views, controllers, i18n, and routing
 - **RadarView with focus area cards** - Three cards (Voice AI, Agent Orchestration, Durable Runtime) with signal/noise sections using CSS Grid layout
 - **Signal vs Noise classification** - Core feature to distinguish actionable technical findings from marketing hype
