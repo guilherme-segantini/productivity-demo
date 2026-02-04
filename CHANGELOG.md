@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - `signal_evidence` and `noise_indicators` fields in Golden Contract schema
 - Mock data with signal and noise examples for each focus area (6 items total)
 - Historical data query support (`GET /api/radar?date=YYYY-MM-DD`)
+- **LiteLLM proxy configuration** (`litellm_config.yaml`) for routing Grok API calls
+- Configurable `LITELLM_BASE_URL`, `LITELLM_API_KEY`, `GROK_MODEL` environment variables
 
 ### Changed
 - **AI Provider**: Switched from Grok 4 to **SAP Generative AI Hub via LiteLLM** (see https://docs.litellm.ai/docs/providers/sap)
