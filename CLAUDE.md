@@ -70,15 +70,27 @@ Before doing any work:
 
 ### Completing Tasks
 
-**Complete workflow:**
-1. Verify all acceptance criteria are met
-2. Ensure tests pass and documentation is updated
-3. Update CHANGELOG.md with your changes
-4. Commit your work with issue reference
-5. Push your branch to remote
-6. Create a PR: `gh pr create --base main --title "Description" --body "Closes #123"`
-7. Merge the PR: `gh pr merge <number> --squash`
-8. The issue will auto-close when PR is merged (using keywords below)
+**ONE TASK AT A TIME RULE:**
+Complete the full cycle for one issue before starting another. Do not work on multiple issues simultaneously.
+
+**Complete workflow (must follow in order):**
+1. **Code** - Implement the changes for the issue
+2. **Test** - Run verification checklist (see below):
+   - [ ] App runs without console errors (`npm start`)
+   - [ ] `npm run lint` passes with 0 errors
+   - [ ] `npm test` passes (all unit tests)
+   - [ ] Manual testing of the feature/fix
+   - [ ] i18n used for all text
+   - [ ] No hardcoded URLs or secrets
+3. **Document** - Update CHANGELOG.md with your changes
+4. **Commit** - Commit your work with issue reference: `git commit -m "feat: description. Part of #123"`
+5. **Push** - Push your branch to remote: `git push origin <branch-name>`
+6. **PR** - Create a pull request: `gh pr create --base main --title "Description" --body "Closes #123"`
+7. **Merge** - Merge the PR: `gh pr merge <number> --squash`
+8. **Verify** - Issue auto-closes when PR is merged
+9. **Next** - Only now pick the next issue from your backlog
+
+**Do not skip testing.** If tests fail, fix them before committing.
 
 **Auto-close keywords in commits/PRs:**
 - `Closes #123`
@@ -195,16 +207,6 @@ Based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 
 ---
 
-## Verification Checklist
-
-Before marking work complete:
-- [ ] App runs without console errors
-- [ ] `ui5lint` passes with 0 errors
-- [ ] Unit tests pass
-- [ ] Navigation works correctly
-- [ ] i18n used for all text
-- [ ] No hardcoded URLs or secrets
-
 ## Decisions Made
 - [Document decisions as you make them]
 
@@ -247,12 +249,17 @@ When starting a new session as a track agent:
 2. **Check GitHub auth:** `gh auth status`
 3. **Sync with main:** `git fetch origin main && git rebase origin/main`
 4. **View your backlog:** `gh issue list --label "track-X"` (replace X with a, b, or c)
-5. **Pick an issue** and add `in-progress` label: `gh issue edit <number> --add-label "in-progress"`
+5. **Pick ONE issue** and add `in-progress` label: `gh issue edit <number> --add-label "in-progress"`
 6. **Do the work** - stay in your track's directory (`webapp/`, `backend/`, or `prompts/`)
-7. **Commit with issue reference:** `git commit -m "feat: description. Part of #<number>"`
+7. **Test everything** - run `npm start`, `npm run lint`, `npm test` and verify manually
 8. **Update CHANGELOG.md** with your changes
-9. **Create a PR:** `gh pr create --base main --title "[Track X] Description" --body "Closes #<number>"`
-10. **Merge the PR:** `gh pr merge <number> --squash` (or wait for review if required)
+9. **Commit with issue reference:** `git commit -m "feat: description. Part of #<number>"`
+10. **Push to remote:** `git push origin feature/track-X`
+11. **Create a PR:** `gh pr create --base main --title "[Track X] Description" --body "Closes #<number>"`
+12. **Merge the PR:** `gh pr merge <number> --squash` (or wait for review if required)
+13. **Repeat** - Go back to step 4 and pick the next issue
+
+**Work on one issue at a time. Complete the full cycle before starting another.**
 
 ### Agent Responsibilities
 
@@ -273,13 +280,22 @@ When starting a new session as a track agent:
 
 ### Workflow Rules
 
+**CRITICAL: One Task at a Time**
+- Work on exactly ONE issue per cycle
+- Complete the full workflow before picking the next issue
+- Never have multiple issues "in progress" simultaneously
+
+**Per-Issue Workflow:**
 1. **Check issues first:** `gh issue list --label "track-X"`
-2. **Claim work:** Add `in-progress` label before starting
+2. **Claim ONE task:** Add `in-progress` label before starting
 3. **Stay in your lane:** Only modify files in your track's directory
-4. **Commit often:** Reference issue numbers (`Part of #8`)
-5. **Update changelog:** Record changes in CHANGELOG.md
-6. **Create PR when done:** Target `main` branch
-7. **Merge the PR:** Use squash merge to integrate into main
+4. **Implement:** Write code, reference issue numbers in commits (`Part of #8`)
+5. **Test thoroughly:** Run `npm start`, `npm run lint`, `npm test` - all must pass
+6. **Update changelog:** Record changes in CHANGELOG.md
+7. **Commit & push:** `git commit` → `git push`
+8. **Create PR:** Target `main` branch with `gh pr create`
+9. **Merge the PR:** Use squash merge with `gh pr merge <number> --squash`
+10. **Repeat:** Go back to step 1 for the next issue
 
 ### Syncing with Main
 
