@@ -15,6 +15,11 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# LiteLLM configuration
+LITELLM_BASE_URL = os.getenv("LITELLM_BASE_URL", "http://localhost:4010")
+LITELLM_API_KEY = os.getenv("LITELLM_API_KEY", "sk-radar-local-dev")
+GROK_MODEL = os.getenv("GROK_MODEL", "grok-3")
+
 # Retry configuration
 MAX_RETRIES = 3
 INITIAL_BACKOFF = 1.0  # seconds
@@ -123,10 +128,13 @@ def call_grok_with_retry(prompt: str) -> Optional[str]:
 
     for attempt in range(MAX_RETRIES):
         try:
+            # Use openai/ prefix to route through LiteLLM proxy
             response = litellm.completion(
-                model="xai/grok-beta",
+                model=f"openai/{GROK_MODEL}",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
+                api_base=LITELLM_BASE_URL,
+                api_key=LITELLM_API_KEY,
             )
             return response.choices[0].message.content.strip()
 
@@ -231,26 +239,24 @@ def check_api_connection() -> dict:
 
     Returns dict with status and message.
     """
-    api_key = os.getenv("XAI_API_KEY")
-    if not api_key:
-        return {
-            "status": "error",
-            "message": "XAI_API_KEY environment variable not set",
-        }
-
     try:
+        # Use openai/ prefix to route through LiteLLM proxy
         response = litellm.completion(
-            model="xai/grok-beta",
+            model=f"openai/{GROK_MODEL}",
             messages=[{"role": "user", "content": "Say 'OK' if you can hear me."}],
             max_tokens=10,
+            api_base=LITELLM_BASE_URL,
+            api_key=LITELLM_API_KEY,
         )
         return {
             "status": "ok",
             "message": "Grok API connection successful",
-            "model": "xai/grok-beta",
+            "model": GROK_MODEL,
+            "litellm_base_url": LITELLM_BASE_URL,
         }
     except Exception as e:
         return {
             "status": "error",
             "message": f"Grok API connection failed: {str(e)}",
+            "litellm_base_url": LITELLM_BASE_URL,
         }

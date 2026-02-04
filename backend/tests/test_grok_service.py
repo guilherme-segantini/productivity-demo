@@ -257,21 +257,9 @@ class TestCallGrokWithRetry:
 class TestCheckApiConnection:
     """Test API connection check function."""
 
-    @patch("app.services.grok_service.os.getenv")
-    def test_missing_api_key(self, mock_getenv):
-        """Test error when API key is not set."""
-        mock_getenv.return_value = None
-
-        result = check_api_connection()
-
-        assert result["status"] == "error"
-        assert "XAI_API_KEY" in result["message"]
-
     @patch("app.services.grok_service.litellm.completion")
-    @patch("app.services.grok_service.os.getenv")
-    def test_successful_connection(self, mock_getenv, mock_completion):
+    def test_successful_connection(self, mock_completion):
         """Test successful API connection check."""
-        mock_getenv.return_value = "test-api-key"
         mock_response = MagicMock()
         mock_response.choices[0].message.content = "OK"
         mock_completion.return_value = mock_response
@@ -279,13 +267,11 @@ class TestCheckApiConnection:
         result = check_api_connection()
 
         assert result["status"] == "ok"
-        assert result["model"] == "xai/grok-beta"
+        assert "litellm_base_url" in result
 
     @patch("app.services.grok_service.litellm.completion")
-    @patch("app.services.grok_service.os.getenv")
-    def test_connection_failure(self, mock_getenv, mock_completion):
+    def test_connection_failure(self, mock_completion):
         """Test API connection failure."""
-        mock_getenv.return_value = "test-api-key"
         mock_completion.side_effect = Exception("Connection refused")
 
         result = check_api_connection()
