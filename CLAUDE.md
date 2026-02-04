@@ -70,12 +70,17 @@ Before doing any work:
 
 ### Completing Tasks
 
-When finishing work:
-- Verify all acceptance criteria are met
-- Ensure tests pass and documentation is updated
-- Close with a summary comment: what was done, files changed, how to verify
+**Complete workflow:**
+1. Verify all acceptance criteria are met
+2. Ensure tests pass and documentation is updated
+3. Update CHANGELOG.md with your changes
+4. Commit your work with issue reference
+5. Push your branch to remote
+6. Create a PR: `gh pr create --base main --title "Description" --body "Closes #123"`
+7. Merge the PR: `gh pr merge <number> --squash`
+8. The issue will auto-close when PR is merged (using keywords below)
 
-**Auto-close keywords in commits:**
+**Auto-close keywords in commits/PRs:**
 - `Closes #123`
 - `Fixes #123`
 - `Resolves #123`
@@ -245,8 +250,9 @@ When starting a new session as a track agent:
 5. **Pick an issue** and add `in-progress` label: `gh issue edit <number> --add-label "in-progress"`
 6. **Do the work** - stay in your track's directory (`webapp/`, `backend/`, or `prompts/`)
 7. **Commit with issue reference:** `git commit -m "feat: description. Part of #<number>"`
-8. **When done, create a PR:** `gh pr create --base main --title "[Track X] Description" --body "Closes #<number>"`
-9. **Update CHANGELOG.md** before ending your session
+8. **Update CHANGELOG.md** with your changes
+9. **Create a PR:** `gh pr create --base main --title "[Track X] Description" --body "Closes #<number>"`
+10. **Merge the PR:** `gh pr merge <number> --squash` (or wait for review if required)
 
 ### Agent Responsibilities
 
@@ -271,8 +277,9 @@ When starting a new session as a track agent:
 2. **Claim work:** Add `in-progress` label before starting
 3. **Stay in your lane:** Only modify files in your track's directory
 4. **Commit often:** Reference issue numbers (`Part of #8`)
-5. **Create PR when done:** Target `main` branch
-6. **Update changelog:** Record changes before ending session
+5. **Update changelog:** Record changes in CHANGELOG.md
+6. **Create PR when done:** Target `main` branch
+7. **Merge the PR:** Use squash merge to integrate into main
 
 ### Syncing with Main
 
@@ -285,10 +292,14 @@ git rebase origin/main
 git push origin feature/track-a --force-with-lease
 ```
 
-### Creating a PR
+### Creating and Merging a PR
 
 ```bash
+# Create the PR
 gh pr create --base main --title "[Track A] Implement RadarView" --body "Closes #9"
+
+# Merge the PR (squash merge)
+gh pr merge <number> --squash
 ```
 
 ### Useful Commands
