@@ -1,180 +1,239 @@
-# Plan: Restructure GitHub Issues for 3-Developer Parallel Work
+# Task Distribution for Parallel Development
 
 ## Objective
-Break down the 7 existing issues into granular, track-specific tasks so 3 developers can work independently without blocking each other.
+Distribute tasks across parallel Claude agents working on isolated git worktrees.
 
 ---
 
-## Current Issues (to be restructured)
-| # | Title | Action |
-|---|-------|--------|
-| 1 | Initialize git repository and create project structure | Keep (shared) |
-| 2 | Update PRD.md with database schema and CORS config | Move to Track B |
-| 3 | Create SETUP.md with environment setup guide | Split by track |
-| 4 | Scaffold backend FastAPI application | Move to Track B |
-| 5 | Scaffold frontend SAPUI5 application | Move to Track A |
-| 6 | Create AI prompt templates | Move to Track C |
-| 7 | Update project_instructions.md | Keep (shared) |
+## Current Open Issues
+
+| Issue | Agent | Title | Labels |
+|-------|-------|-------|--------|
+| #18 | Frontend Dev 1 | UI5 App Shell & Base Structure | track-a, ready |
+| #19 | Frontend Dev 2 | Voice AI Panel Component | track-a, ready |
+| #20 | Backend Dev 1 | FastAPI App & GET /api/radar Endpoint | track-b, ready |
 
 ---
 
-## Proposed Issue Structure (18 issues total)
+## Completed Issues (Historical)
 
-### Phase 0: Shared Foundation (2 issues) - Any Developer
-| # | Title | Labels | Blocks |
-|---|-------|--------|--------|
-| 1 | ✅ Initialize git repository and create project structure | chore | All tracks |
-| 7 | Update project_instructions.md with task and git guidelines | docs | None |
-
-### Track A: Frontend (5 issues) - Developer A
-| New # | Title | Labels | Dependencies |
-|-------|-------|--------|--------------|
-| 8 | [Track A] Create UI5 project skeleton | feature, track-a | #1 |
-| 9 | [Track A] Implement RadarView with 3-panel layout | feature, track-a | #8 |
-| 10 | [Track A] Add mock data and JSON model binding | feature, track-a | #8 |
-| 11 | [Track A] Create i18n translations | feature, track-a | #8 |
-| 12 | [Track A] Add formatter and styling for signal/noise | feature, track-a | #9, #10 |
-
-### Track B: Backend (6 issues) - Developer B
-| New # | Title | Labels | Dependencies |
-|-------|-------|--------|--------------|
-| 2 | ✅ Update PRD.md with database schema and CORS config | docs, track-b | None |
-| 3 | Create SETUP.md for backend (xAI API, Python setup) | docs, track-b | None |
-| 4 | ✅ Scaffold backend FastAPI application | feature, track-b | #1 |
-| 13 | [Track B] Implement SQLite models and database setup | feature, track-b | #4 |
-| 14 | [Track B] Implement GET /api/radar endpoint | feature, track-b | #13 |
-| 15 | [Track B] Implement POST /api/radar/refresh with Grok integration | feature, track-b | #14, #6 |
-
-### Track C: AI/Prompts (4 issues) - Developer C
-| New # | Title | Labels | Dependencies |
-|-------|-------|--------|--------------|
-| 6 | ✅ Create AI prompt templates | feature, track-c | None |
-| 16 | [Track C] Design voice_ai classification prompt | feature, track-c | #6 |
-| 17 | [Track C] Design agent_orchestration classification prompt | feature, track-c | #6 |
-| 18 | [Track C] Design durable_runtime classification prompt | feature, track-c | #6 |
-
-### Phase 2: Integration (3 issues) - All Developers
-| New # | Title | Labels | Dependencies |
-|-------|-------|--------|--------------|
-| 19 | [Integration] Connect frontend to backend API | feature, integration | #12, #14 |
-| 20 | [Integration] End-to-end test: Grok → DB → API → UI | feature, integration | #15, #19 |
-| 21 | [Integration] Update SETUP.md with full integration guide | docs, integration | #19, #20 |
+| Issue | Title | Status |
+|-------|-------|--------|
+| #1 | [Track A] Set up SAPUI5 project structure | CLOSED |
+| #2 | [Track A] Implement RadarView with 3 focus area cards | CLOSED |
+| #3 | [Track A] Add mock data and JSON model binding | CLOSED |
+| #4 | [Track B] Set up FastAPI project structure | CLOSED |
+| #5 | [Track B] Implement /api/radar endpoints | CLOSED |
+| #6 | [Track B] Integrate LiteLLM with xAI/Grok | CLOSED |
+| #7 | [Track C] Create Voice AI prompt template | CLOSED |
+| #8 | [Track C] Create Agent Orchestration prompt template | CLOSED |
+| #9 | [Track C] Create Durable Runtime prompt template | CLOSED |
 
 ---
 
-## Implementation Steps
+## Agent Structure
 
-### Step 1: Create Track Labels
+| Agent | Worktree | Branch | Focus | Current Issue |
+|-------|----------|--------|-------|---------------|
+| **Orchestrator** | demo2 | main | PR merging, coordination | - |
+| **Frontend Dev 1** | demo2-fe1 | feature/frontend-dev-1 | UI5 components | #18 |
+| **Frontend Dev 2** | demo2-fe2 | feature/frontend-dev-2 | UI5 views/styling | #19 |
+| **Backend Dev 1** | demo2-be1 | feature/backend-dev-1 | API endpoints | #20 |
+| **Backend Dev 2** | demo2-be2 | feature/backend-dev-2 | Database/models | - |
+| **Prompt Engineer** | demo2-prompt | feature/prompt-engineer | AI prompts | - |
+| **Problem Finder (QA)** | demo2-qa | feature/problem-finder | Testing/QA | - |
+| **DevOps** | demo2-devops | feature/devops | CI/CD pipeline | - |
+
+---
+
+## Issue Details
+
+### #18 - [Frontend Dev 1] UI5 App Shell & Base Structure
+
+**Agent:** Frontend Dev 1
+**Labels:** track-a, ready
+
+**Description:**
+Create the foundational UI5 application structure including Component.js, manifest.json, index.html, and base configuration.
+
+**Acceptance Criteria:**
+- [ ] `webapp/Component.js` - Root UI5 component
+- [ ] `webapp/manifest.json` - App configuration with routing
+- [ ] `webapp/index.html` - Entry point with async loading
+- [ ] `webapp/view/App.view.xml` - App shell view
+- [ ] `webapp/controller/BaseController.js` - Shared controller utilities
+- [ ] `package.json` - npm scripts (start, build, lint)
+- [ ] `ui5.yaml` - UI5 tooling configuration
+- [ ] App loads without errors at localhost:8080
+- [ ] `npm run lint` passes with 0 errors
+
+**Test Verification:**
 ```bash
-gh label create "track-a" --description "Frontend (SAPUI5)" --color "1D76DB"
-gh label create "track-b" --description "Backend (FastAPI)" --color "D93F0B"
-gh label create "track-c" --description "AI/Prompts" --color "0E8A16"
-gh label create "integration" --description "Cross-track integration" --color "FBCA04"
-```
-
-### Step 2: Update Existing Issues
-- Add track labels to issues #2, #3, #4, #5, #6
-- Update issue #3 title to focus on backend setup only
-
-### Step 3: Create New Track-Specific Issues
-
-**Track A (Frontend):**
-- #8: Create UI5 project skeleton (Component.js, manifest.json, index.html, package.json, ui5.yaml)
-- #9: Implement RadarView with 3-panel layout (sap.f.GridList, sap.m.Panel for each focus area)
-- #10: Add mock data and JSON model binding (mock_radar.json, model setup in manifest)
-- #11: Create i18n translations (all user-facing text)
-- #12: Add formatter and styling for signal/noise (confidence display, color coding)
-
-**Track B (Backend):**
-- #13: Implement SQLite models and database setup (Trend model, init_db function)
-- #14: Implement GET /api/radar endpoint (return trends, optional date filter)
-- #15: Implement POST /api/radar/refresh with Grok integration (call LiteLLM, persist results)
-
-**Track C (AI/Prompts):**
-- #16: Design voice_ai classification prompt (latency benchmarks, VAD specs criteria)
-- #17: Design agent_orchestration classification prompt (BKG integration, state persistence criteria)
-- #18: Design durable_runtime classification prompt (SLAs, cold-start benchmarks criteria)
-
-**Integration:**
-- #19: Connect frontend to backend API (switch dataSource, handle CORS)
-- #20: End-to-end test: Grok → DB → API → UI (manual refresh flow)
-- #21: Update SETUP.md with full integration guide
-
-### Step 4: Set Up Dependencies (blockedBy)
-Use GitHub issue references in descriptions to indicate dependencies.
-
----
-
-## Developer Assignment Overview
-
-### Developer A (Frontend - Track A)
-**Backlog:** #8 → #9, #10, #11 (parallel) → #12 → #19 (with Dev B)
-**Stack:** Node.js, SAPUI5 1.120+, JavaScript ES6+
-**Can start immediately:** Yes (uses mock data)
-
-### Developer B (Backend - Track B)
-**Backlog:** #2 → #4 → #13 → #14 → #15 (needs #6 from Dev C) → #19, #20
-**Stack:** Python 3.10+, FastAPI, SQLite, LiteLLM
-**Can start immediately:** Yes (mock Grok responses until prompts ready)
-
-### Developer C (AI/Prompts - Track C)
-**Backlog:** #6 → #16, #17, #18 (parallel) → #20
-**Stack:** Grok playground, JSON schema validation
-**Can start immediately:** Yes (iterate in playground)
-
----
-
-## Verification Plan
-
-### Track A Verification
-```bash
-cd webapp && npm install && npm start
-# Browser at http://localhost:8080 shows 3 panels with mock data
+npm install && npm start
+# Browser opens at localhost:8080, app shell renders
 npm run lint  # 0 errors
 ```
 
-### Track B Verification
+---
+
+### #19 - [Frontend Dev 2] Voice AI Panel Component
+
+**Agent:** Frontend Dev 2
+**Labels:** track-a, ready
+
+**Description:**
+Create the Voice AI panel component for the RadarView, displaying signal and noise items with proper styling.
+
+**Acceptance Criteria:**
+- [ ] `webapp/view/RadarView.view.xml` - Voice AI panel section
+- [ ] `webapp/controller/RadarView.controller.js` - Panel controller logic
+- [ ] `webapp/model/mock_radar.json` - Mock data from PRD
+- [ ] `webapp/model/formatter.js` - Signal/noise formatting
+- [ ] `webapp/i18n/i18n.properties` - Voice AI translations
+- [ ] `webapp/css/style.css` - Signal (green) and noise (gray) styling
+- [ ] Panel displays Voice AI items from mock data
+- [ ] Signal items show green badge with evidence list
+- [ ] Noise items show gray badge with noise indicators
+- [ ] Confidence score displays correctly
+
+**Test Verification:**
 ```bash
-cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-pytest  # All tests pass
-uvicorn app.main:app --reload
-curl http://localhost:8000/api/radar  # Returns JSON
-```
-
-### Track C Verification
-- Test each prompt in Grok playground
-- Validate output against Golden Contract JSON schema
-- Confirm signal items have evidence, noise items have indicators
-
-### Integration Verification
-```bash
-# Terminal 1: Start backend
-cd backend && uvicorn app.main:app --reload
-
-# Terminal 2: Start frontend
 npm start
-
-# Browser: http://localhost:8080
-# 1. Should show live data from backend
-# 2. Network tab shows calls to localhost:8000
-# 3. Manual refresh: curl -X POST http://localhost:8000/api/radar/refresh
-# 4. UI updates with new data
+# Voice AI panel renders with 2 items (LiveKit Agents, VoiceHype AI)
+# Signal item has green styling, noise item has gray styling
 ```
 
 ---
 
-## Files to Create/Modify
+### #20 - [Backend Dev 1] FastAPI App & GET /api/radar Endpoint
 
-### New Labels (4)
-- `track-a`, `track-b`, `track-c`, `integration`
+**Agent:** Backend Dev 1
+**Labels:** track-b, ready
 
-### New Issues (14)
-- #8-#12 (Track A)
-- #13-#15 (Track B)
-- #16-#18 (Track C)
-- #19-#21 (Integration)
+**Description:**
+Create the FastAPI application with the GET /api/radar endpoint that returns radar data from SQLite.
 
-### Updated Issues (5)
-- #2, #3, #4, #5, #6 (add track labels)
+**Acceptance Criteria:**
+- [ ] `backend/app/__init__.py` - Package init
+- [ ] `backend/app/main.py` - FastAPI app with CORS middleware
+- [ ] `backend/app/api/__init__.py` - API package init
+- [ ] `backend/app/api/radar.py` - GET /api/radar endpoint
+- [ ] `backend/requirements.txt` - Python dependencies
+- [ ] `backend/.env.example` - Environment template
+- [ ] GET /api/radar returns JSON matching Golden Contract schema
+- [ ] GET /api/radar?date=YYYY-MM-DD filters by date
+- [ ] Response time <200ms
+- [ ] CORS allows localhost:8080
+
+**Test Verification:**
+```bash
+cd backend
+uv venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+uvicorn app.main:app --reload
+curl http://localhost:8000/api/radar  # Returns JSON
+curl http://localhost:8000/api/radar?date=2026-01-30  # Filtered
+```
+
+---
+
+## Agent Responsibilities
+
+### Orchestrator Agent
+- Monitor PR status across all agents
+- Merge PRs when ready (squash merge)
+- Resolve merge conflicts if needed
+- Coordinate cross-agent dependencies
+- Keep main branch stable
+
+### Frontend Dev 1
+**Stack:** SAP UI5 1.120+, JavaScript ES6+
+**Files:** `webapp/Component.js`, `webapp/controller/*`, `webapp/model/*`
+- Current: Issue #18 - UI5 App Shell & Base Structure
+
+### Frontend Dev 2
+**Stack:** SAP UI5 1.120+, XML views, CSS
+**Files:** `webapp/view/*`, `webapp/css/*`, `webapp/i18n/*`
+- Current: Issue #19 - Voice AI Panel Component
+
+### Backend Dev 1
+**Stack:** Python 3.11+, FastAPI
+**Files:** `backend/app/api/*`, `backend/app/services/*`
+- Current: Issue #20 - FastAPI App & GET /api/radar Endpoint
+
+### Backend Dev 2
+**Stack:** Python 3.11+, SQLAlchemy, SQLite
+**Files:** `backend/app/models.py`, `backend/app/database.py`
+- Waiting for new issues
+
+### Prompt Engineer
+**Stack:** Grok prompts, JSON schema
+**Files:** `prompts/*`
+- Waiting for new issues
+
+### Problem Finder (QA)
+**Focus:** Testing, bug discovery, code review
+- Waiting for new issues
+
+### DevOps Agent
+**Stack:** GitHub Actions, Docker
+**Files:** `.github/workflows/*`, `Dockerfile`, `docker-compose.yml`
+- Waiting for new issues
+
+---
+
+## Starting an Agent
+
+Each agent runs in its own terminal:
+
+```bash
+# Orchestrator
+cd /Users/I769068/projects/scaling-productivity/demo2 && claude
+
+# Frontend Dev 1
+cd /Users/I769068/projects/scaling-productivity/demo2-fe1 && claude
+
+# Frontend Dev 2
+cd /Users/I769068/projects/scaling-productivity/demo2-fe2 && claude
+
+# Backend Dev 1
+cd /Users/I769068/projects/scaling-productivity/demo2-be1 && claude
+
+# Backend Dev 2
+cd /Users/I769068/projects/scaling-productivity/demo2-be2 && claude
+
+# Prompt Engineer
+cd /Users/I769068/projects/scaling-productivity/demo2-prompt && claude
+
+# Problem Finder (QA)
+cd /Users/I769068/projects/scaling-productivity/demo2-qa && claude
+
+# DevOps
+cd /Users/I769068/projects/scaling-productivity/demo2-devops && claude
+```
+
+---
+
+## Workflow Rules
+
+1. **One issue at a time** - Complete full cycle before starting next
+2. **Test before commit** - Run linters and tests (MANDATORY)
+3. **Use Playwright MCP** - For all UI testing
+4. **Update CHANGELOG.md** - Document changes
+5. **Squash merge PRs** - Keep history clean
+6. **Sync before starting** - `git fetch origin main && git rebase origin/main`
+7. **Use uv only** - Never use pip/venv directly
+
+---
+
+## Verification Checklist
+
+Before marking any issue complete:
+- [ ] App runs without console errors
+- [ ] `npm run lint` passes (frontend)
+- [ ] `pytest` passes (backend)
+- [ ] UI tested with Playwright MCP
+- [ ] i18n used for all text
+- [ ] No hardcoded URLs or secrets
+- [ ] CHANGELOG.md updated
+- [ ] PR created and merged
